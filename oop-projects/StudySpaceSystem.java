@@ -161,7 +161,7 @@ public class StudySpaceSystem { //Class for the Main program
                 } else {
                     // Standard Bubble Sort (Exact same logic)
                     for (int i = 0; i < count - 1; i++) {
-                        for (int j = 0; j < count - i - 1; j++) {
+                        for (int j = 0; j < count - i - 1; j++) { //nested loops
 
                             String name1 = reservations[j].getStudentName();
                             String name2 = reservations[j + 1].getStudentName();
@@ -169,7 +169,7 @@ public class StudySpaceSystem { //Class for the Main program
                             if (name1.compareToIgnoreCase(name2) > 0) {
                                 Reservation temp = reservations[j];
                                 reservations[j] = reservations[j + 1];
-                                reservations[j + 1] = temp;
+                                reservations[j + 1] = temp; 
                             }
                         }
                     }
