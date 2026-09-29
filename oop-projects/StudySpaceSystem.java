@@ -83,15 +83,23 @@ public class StudySpaceSystem { //Class for the Main program
             String menu = "Group 2 STUDY SPACE SYSTEM \n\n"
                         + "1. Reserve Space\n"
                         + "2. View Reservations\n"
-                        + "3. Sort Names\n"
-                        + "4. Exit\n\n"
-                        + "Enter Choice (1-4):";
+                        + "3. Search Reservation\n"
+                        + "4. Edit Reservation\n"
+                        + "5. Cancel Reservation\n"
+                        + "6. Sort Names\n"
+                        + "7. Exit\n"
+                        + "Enter Choice (1-7):";
 
-            String inputChoice = JOptionPane.showInputDialog(null, menu);
+            String inputChoice = JOptionPane.showInputDialog(
+                null,                   //parent component
+                menu,                   //Message text
+                "Study Space System",   //title shown at the top bar
+                JOptionPane.PLAIN_MESSAGE //Message type
+                );
 
             // If user clicks Cancel or closes the pop-up window
             if (inputChoice == null) { //If the user clicks "Cancel" or closes the window, choice sets to 4 to exit cleanly without crashing.
-                choice = 4;
+                choice = 7;
                 break;
             }
 
@@ -155,33 +163,111 @@ public class StudySpaceSystem { //Class for the Main program
                 }
 
             } else if (choice == 3) {
-
                 if (count == 0) {
-                    JOptionPane.showMessageDialog(null, "No names to sort.", "Sort Names", JOptionPane.INFORMATION_MESSAGE);
+                 JOptionPane.showMessageDialog(null, "No reservations to search.", "Search", JOptionPane.INFORMATION_MESSAGE);
                 } else {
-                    // Standard Bubble Sort (Exact same logic)
-                    for (int i = 0; i < count - 1; i++) {
-                        for (int j = 0; j < count - i - 1; j++) { //nested loops
+                    String searchName = JOptionPane.showInputDialog(null, "Enter Student Name to Searc: ", "Search Reservation", JOptionPane.PLAIN_MESSAGE);
+                    if (searchName != null && !searchName.trim().isEmpty()) {
+                        boolean found = false;
+                        StringBuilder result = new StringBuilder("--Search Result--\n");
+                        for (int i = 0; i < count; i++) {
+                            if (reservations[i].getStudentName().equalsIgnoreCase(searchName.trim())) {
+                                result.append("Index ").append(i + 1).append(": ")
+                                    .append(reservations[i].getStudentName()).append(" - ")
+                                    .append(reservations[i].getSpace().getRoomName()).append(" [")
+                                    .append(reservations[i].getSpace().getType()).append("]\n");
+                                found = true;
+                            }
+                        }
+                        if (found) {
+                            JOptionPane.showMessageDialog(null, result.toString(), "Search Result", JOptionPane.INFORMATION_MESSAGE);
+                        } else {
+                            JOptionPane.showMessageDialog(null, "Student not found in reservations.", "Search Result", JOptionPane.WARNING_MESSAGE);
+                        }
+                    }
+                }
+            }   else if (choice == 4) {
+                if (count == 0 ) {
+                    JOptionPane.showMessageDialog(null, "No reservation to edit.", "Edit Reservation", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    String searchName = JOptionPane.showInputDialog(null, "Enter Student Name whose reservation you want to edit: ", "Edit Reservation", JOptionPane.PLAIN_MESSAGE);
 
-                            String name1 = reservations[j].getStudentName();
-                            String name2 = reservations[j + 1].getStudentName();
+                    int matchIndex = -1;
 
-                            if (name1.compareToIgnoreCase(name2) > 0) {
-                                Reservation temp = reservations[j];
-                                reservations[j] = reservations[j + 1];
-                                reservations[j + 1] = temp; 
+                    if (searchName != null && !searchName.trim().isEmpty()) {
+                        
+                        for (int i = 0; i < count; i++) {
+                            if (reservations[i].getStudentName().equalsIgnoreCase(searchName.trim())) {
+                                matchIndex = i;
+                                break;
                             }
                         }
                     }
-
-                    JOptionPane.showMessageDialog(null, "Names Sorted Alphabetically!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                    
+                    if (matchIndex != - 1){
+                        String newName = JOptionPane.showInputDialog(null, "Enter New Student Name", reservations[matchIndex].getStudentName());
+                        String newSpace = JOptionPane.showInputDialog(null, "Enter New Space Name", reservations[matchIndex].getSpace().getRoomName());
+                    
+                        if (newName != null && newSpace != null && !newName.trim().isEmpty() && !newSpace.trim().isEmpty()) {
+                            reservations[matchIndex].setStudentName(newName.trim());
+                            reservations[matchIndex].setSpace(new QuietZone(newSpace.trim()));
+                            JOptionPane.showMessageDialog(null, "Reservation Updated Successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                        } else {
+                        JOptionPane.showMessageDialog(null, "Student Name not Found.", "Error", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                    
                 }
+                } else if (choice == 5 ) {
+                    if (count == 0) {
+                        JOptionPane.showMessageDialog(null, "No reservation to cancel","Cancel Reservation", JOptionPane.INFORMATION_MESSAGE);
+                    } else {
+                        String cancelName = JOptionPane.showInputDialog(null, "Enter Student Name to Cancel Reservation", "Cancel Reservation", JOptionPane.PLAIN_MESSAGE);
+                        if (cancelName != null && !cancelName.trim().isEmpty()){
+                            int matchIndex = -1;
+                            for (int i = 0; i < count; i++) {
+                                if (reservations[i].getStudentName().equalsIgnoreCase(cancelName.trim())) {
+                                    matchIndex = i;
+                                    break;
+                                }
+                            }
 
-            } else if (choice != 4) {
-                JOptionPane.showMessageDialog(null, "Invalid option! Choose between 1 and 4.", "Error", JOptionPane.ERROR_MESSAGE);
-            }
+                            if (matchIndex != -1) {
+                                for (int i = matchIndex; i < count -1; i++) {
+                                    reservations[i] = reservations[i + 1];
+                                }
+                                reservations[count - 1] = null;
+                                count--;
+                                JOptionPane.showMessageDialog(null, "Reservation Canceled Succesfully", "Sucess", JOptionPane.INFORMATION_MESSAGE);
+                            } else {
+                                JOptionPane.showMessageDialog(null, "Student Name not found", " Errror", JOptionPane.ERROR_MESSAGE);
+                            }    
+                        }
+                    }
+                } else if (choice == 6) {
+                    if (count == 0 ) {
+                        JOptionPane.showMessageDialog(null, "No names to sort.", "Sort Names", JOptionPane.INFORMATION_MESSAGE);
+                    } else {
+                            for (int i = 0; i < count -1; i++) {
+                                for (int j = 0; j < count - i - 1; j++) {
+                                    String name1 = reservations[j].getStudentName();
+                                    String name2 = reservations[j + 1].getStudentName();
 
-        } while (choice != 4);
+                                    if (name1.compareToIgnoreCase(name2) > 0) {
+                                        Reservation temp = reservations[j];
+                                        reservations[j] = reservations[j + 1];
+                                        reservations[j + 1] = temp;
+                                    }
+                                }
+                            }
+                            JOptionPane.showMessageDialog(null, "Names Sorted Alpabetically.", "Success", JOptionPane.INFORMATION_MESSAGE);
+                        }
+
+                        } else if (choice != 7) {
+                            JOptionPane.showMessageDialog(null, "Invalid Option 1-7 only", "Error", JOptionPane.ERROR_MESSAGE);
+                        }
+
+        } while (choice != 7);
 
         JOptionPane.showMessageDialog(null, "Thank you for using Study Space System!", "Goodbye", JOptionPane.INFORMATION_MESSAGE);
     }
