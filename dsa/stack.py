@@ -1,120 +1,154 @@
-#Benjamin Era
-#BSCS 2A
+import os
+import sys
+from ascii_art import ASCII_ART
 
 
-class BrowserStack:
-    "A fixed-capacity LIFO stack simulating browser back-button history."
+class stack:
+    def __init__(self):
+        # Stack 1 - Available Laptops
+        self.laptop_stack = []
+        # Stack 2 - Student ID deposits stored as tuples: (student_id, laptop_id)
+        self.deposit_stack = []
 
-    def __init__(self, capacity): #internal state
-        self.capacity = capacity
-        # Pre-allocate fixed-size storage (acts like a raw array)
-        self.storage = [None] * capacity # None = empty slot. we cant add append()
-        self.top = -1  #stock is envy
+    def load_initial_inventory(self, laptop_ids):
+        """Pre-load laptops onto the desk stack"""
+        for laptop in laptop_ids:
+            self.laptop_stack.append(laptop)
 
-    #Core Operations
-    def visit_page(self, url): #push function
-        "Push equivalent: visiting a new page."
-        if self.top == self.capacity - 1:
-            print(f"[Page Visit] Attempted to open '{url}'")
-            print("Error: Stack Overflow! History limit reached "
-                  f"(Capacity: {self.capacity}). Close a tab or clear history first.")
+    def is_laptops_empty(self):
+        return len(self.laptop_stack) == 0
+
+    def is_deposits_empty(self):
+        return len(self.deposit_stack) == 0
+
+    def borrow_laptop(self, student_id):
+        """
+                             BORROW OPERATION: POP top Laptop from laptop_stack
+                             PUSH student ID & laptop pair onto deposit_stack """
+
+        if self.is_laptops_empty():
+            print("\n[ERROR] No laptops available in the stack!")
             return
 
-        self.top += 1
-        self.storage[self.top] = url
-        print(f"[Page Visit] Opened '{url}'")
-        self._show_state()
+        # POP laptop from top of stack
+        assigned_laptop = self.laptop_stack.pop()
 
-    def go_back(self): #pop function like going back in the web
-        
-        if self.top == -1:
-            print("[Go Back]")
-            print("Error: Stack Underflow! No previous page to go back to.")
-            return None
+        # PUSH deposit record onto top of deposit stack
+        deposit_record = (student_id, assigned_laptop)
+        self.deposit_stack.append(deposit_record)
 
-        page = self.storage[self.top]
-        self.storage[self.top] = None  # clear the slot manually
-        self.top -= 1
-        print(f"[Go Back] Left '{page}'")
-        self._show_state()
-        return page
+        print("\n[SUCCESS] ID Deposited & Laptop Issued!")
+        print("Student ID Deposited : " + student_id)
+        print("Laptop Handed Out   : " + assigned_laptop)
 
-    def current_page(self):
-        """Peek equivalent: see the page currently displayed, no change."""
-        if self.top == -1:
-            print("[Current Page Check] No page is currently open.")
-            return None
+    def return_laptop(self):
+        """
+                        RETURN OPERATION: POP top deposit record from deposit_stack
+                        - PUSH laptop back onto laptop_stack  """
 
-        page = self.storage[self.top]
-        print(f"[Current Page Check] You are viewing: '{page}'")
-        return page
+        if self.is_deposits_empty():
+            print("\n[ERROR] No active deposits found! All laptops are returned.")
+            return
 
-    def is_empty(self):
-        """isEmpty check."""
-        empty = self.top == -1
-        print(f"[Empty Check] Is history empty? {empty}")
-        return empty
+        # POP deposit record off top of stack
+        returned_student_id, returned_laptop = self.deposit_stack.pop()
 
-    #Helper
+        # PUSH laptop back onto top of laptop stack
+        self.laptop_stack.append(returned_laptop)
 
-    def _show_state(self):
-        active = [item for item in self.storage if item is not None]
-        current = self.storage[self.top] if self.top != -1 else None
-        print(f"Stack: {active} | Current Page: {current}")
+        print("\n[RETURN PROCESSED] Item Returned Successfully!")
+        print("Student ID Returned : " + returned_student_id)
+        print("Laptop Restocked   : " + returned_laptop)
+
+    def peek_status(self):
+        top_laptop = self.laptop_stack[-1] if not self.is_laptops_empty() else "None (Empty)"
+        top_deposit = self.deposit_stack[-1] if not self.is_deposits_empty() else "None (Empty)"
+        return top_laptop, top_deposit
+
+    def display_stacks(self):
+        print()
+        print("=" * 60)
+        print("                CURRENT STACK STATES")
+        print("=" * 60)
+
+        # Laptop Stack View (Top to Bottom)
+        print("Available Laptops Stack (Top -> Bottom):")
+        if self.is_laptops_empty():
+            print("  [ Empty ]")
+        else:
+            for idx, lap in enumerate(reversed(self.laptop_stack)):
+                tag = " (TOP / NEXT)" if idx == 0 else ""
+                print("  | " + str(lap) + " |" + tag)
+
+        print("-" * 60)
+
+        # Deposit Stack View (Top to Bottom)
+        print("Deposited IDs Stack (Top -> Bottom):")
+        if self.is_deposits_empty():
+            print("  [ Empty ]")
+        else:
+            for idx, (s_id, lap) in enumerate(reversed(self.deposit_stack)):
+                tag = " (TOP / MOST RECENT)" if idx == 0 else ""
+                print("  | Student ID: " + str(s_id) + " <-> Laptop: " + str(lap) + " |" + tag)
+
+        print("=" * 60)
 
 
+def clear_screen():
+    os.system("cls" if os.name == "nt" else "clear")
 
-# SIMULATION my experience in MUN DEBATE
+
+def run_program():
+    desk = stack()
+
+    # Pre-populate desk with 3 charged laptops
+    desk.load_initial_inventory(["LAPTOP-101", "LAPTOP-102", "LAPTOP-103"])
+
+    running = True
+    while running:
+        clear_screen()
+
+        # ---- ASCII ART HEADER ----
+        print(ASCII_ART)
+        print("=" * 60)
+
+        top_lap, top_dep = desk.peek_status()
+
+        print(" Next Laptop Ready to Borrow (PEEK) : " + str(top_lap))
+        print(" Top Active ID Deposit (PEEK)       : " + str(top_dep))
+        print("-" * 60)
+        print("  1. Borrow Laptop   (Deposit ID  -> PUSH ID Stack, POP Laptop Stack)")
+        print("  2. Return Laptop   (Retrieve ID -> POP ID Stack,  PUSH Laptop Stack)")
+        print("  3. Inspect Stacks  (View full stack contents in LIFO order)")
+        print("  4. Exit Application")
+        print("-" * 60)
+
+        user_choice = input("Select an operation (1-4): ").strip()
+
+        if user_choice == "1":
+            student_id = input("\nEnter Student ID to deposit (e.g., 2025-0001): ").strip().upper()
+            if student_id:
+                desk.borrow_laptop(student_id)
+            else:
+                print("\n[ERROR] Student ID cannot be empty.")
+            input("\nPress Enter to continue...")
+
+        elif user_choice == "2":
+            desk.return_laptop()
+            input("\nPress Enter to continue...")
+
+        elif user_choice == "3":
+            desk.display_stacks()
+            input("\nPress Enter to continue...")
+
+        elif user_choice == "4":
+            print("\nExiting Laptop Lending Desk program. Thank you!\n")
+            running = False
+
+        else:
+            print("\n[INVALID INPUT] Please enter a number from 1 to 4.")
+            input("\nPress Enter to continue...")
+
 
 if __name__ == "__main__":
-    print("=== Scenario: Browser Navigation Back-Button Stack (Capacity: 4) ===\n")
-
-    history = BrowserStack(capacity=4)
-
-    # 1. Push - visit first page
-    history.visit_page("google.com/search?q=MUN+resolution+topics")
-    print()
-
-    # 2. Push - visit second page
-    history.visit_page("un.org/resolutions/sample-format")
-    print()
-
-    # 3. Push - visit third page
-    history.visit_page("canva.com/design/conference-poster")
-    print()
-
-    # 4. Peek - check current page without modifying the stack
-    history.current_page()
-    print()
-
-    # 5. Pop - click Back once
-    history.go_back()
-    print()
-
-    # 6. isEmpty check while items remain
-    history.is_empty()
-    print()
-
-    # 7. Push two more pages to test near-overflow behavior
-    history.visit_page("gmail.com/inbox")
-    print()
-    history.visit_page("docs.google.com/spreadsheet/outreach-list")
-    print()
-
-    # 8. Boundary test - trigger Stack Overflow (capacity is 4, already holds 4)
-    history.visit_page("drive.google.com/folder/certificates")
-    print()
-
-    # 9. Pop everything to empty the stack
-    history.go_back()
-    history.go_back()
-    history.go_back()
-    history.go_back()
-    print()
-
-    # 10. Boundary test - trigger Stack Underflow
-    history.go_back()
-    print()
-
-    # 11. Final isEmpty confirmation
-    history.is_empty()
+    run_program()
