@@ -86,9 +86,8 @@ public class StudySpaceSystem { //Class for the Main program
                         + "3. Search Reservation\n"
                         + "4. Edit Reservation\n"
                         + "5. Cancel Reservation\n"
-                        + "6. Sort Names\n"
-                        + "7. Exit\n"
-                        + "Enter Choice (1-7):";
+                        + "6. Exit\n"
+                        + "Enter Choice (1-6):";
 
             String inputChoice = JOptionPane.showInputDialog(
                 null,                   //parent component
@@ -99,7 +98,7 @@ public class StudySpaceSystem { //Class for the Main program
 
             // If user clicks Cancel or closes the pop-up window
             if (inputChoice == null) { //If the user clicks "Cancel" or closes the window, choice sets to 4 to exit cleanly without crashing.
-                choice = 7;
+                choice = 6;
                 break;
             }
 
@@ -166,7 +165,7 @@ public class StudySpaceSystem { //Class for the Main program
                 if (count == 0) {
                  JOptionPane.showMessageDialog(null, "No reservations to search.", "Search", JOptionPane.INFORMATION_MESSAGE);
                 } else {
-                    String searchName = JOptionPane.showInputDialog(null, "Enter Student Name to Searc: ", "Search Reservation", JOptionPane.PLAIN_MESSAGE);
+                    String searchName = JOptionPane.showInputDialog(null, "Enter Student Name to Search: ", "Search Reservation", JOptionPane.PLAIN_MESSAGE);
                     if (searchName != null && !searchName.trim().isEmpty()) {
                         boolean found = false;
                         StringBuilder result = new StringBuilder("--Search Result--\n");
@@ -216,9 +215,8 @@ public class StudySpaceSystem { //Class for the Main program
                         JOptionPane.showMessageDialog(null, "Student Name not Found.", "Error", JOptionPane.ERROR_MESSAGE);
                         }
                     }
-                    
                 }
-                } else if (choice == 5 ) {
+            } else if (choice == 5 ) {
                     if (count == 0) {
                         JOptionPane.showMessageDialog(null, "No reservation to cancel","Cancel Reservation", JOptionPane.INFORMATION_MESSAGE);
                     } else {
@@ -244,30 +242,11 @@ public class StudySpaceSystem { //Class for the Main program
                             }    
                         }
                     }
-                } else if (choice == 6) {
-                    if (count == 0 ) {
-                        JOptionPane.showMessageDialog(null, "No names to sort.", "Sort Names", JOptionPane.INFORMATION_MESSAGE);
-                    } else {
-                            for (int i = 0; i < count -1; i++) {
-                                for (int j = 0; j < count - i - 1; j++) {
-                                    String name1 = reservations[j].getStudentName();
-                                    String name2 = reservations[j + 1].getStudentName();
+            } else if (choice != 6) {
+                JOptionPane.showMessageDialog(null, "Invalid Option 1-6 only", "Error", JOptionPane.ERROR_MESSAGE);
+            }
 
-                                    if (name1.compareToIgnoreCase(name2) > 0) {
-                                        Reservation temp = reservations[j];
-                                        reservations[j] = reservations[j + 1];
-                                        reservations[j + 1] = temp;
-                                    }
-                                }
-                            }
-                            JOptionPane.showMessageDialog(null, "Names Sorted Alpabetically.", "Success", JOptionPane.INFORMATION_MESSAGE);
-                        }
-
-                        } else if (choice != 7) {
-                            JOptionPane.showMessageDialog(null, "Invalid Option 1-7 only", "Error", JOptionPane.ERROR_MESSAGE);
-                        }
-
-        } while (choice != 7);
+        } while (choice != 6);
 
         JOptionPane.showMessageDialog(null, "Thank you for using Study Space System!", "Goodbye", JOptionPane.INFORMATION_MESSAGE);
     }
