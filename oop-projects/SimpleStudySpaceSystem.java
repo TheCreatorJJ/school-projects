@@ -76,19 +76,27 @@ public class SimpleStudySpaceSystem {     //define the main class
           choice = Integer.parseInt(input);    //
 
             // RESERVE SPACE
-            if (choice == 1) {      //if the user choose option 1
+            if (choice == 1) {      
                 if (count < 10) {
                     String name = JOptionPane.showInputDialog(null, "Enter Student Name:");
                     String space = JOptionPane.showInputDialog(null, "Enter Study Space Name:");
 
-                    if (name != null && space != null && !name.trim().isEmpty() && !space.trim().isEmpty()) {
+                    //check if the name and space is null
+                    if (name == null || space == null) { 
+                    } 
+                    // check if the boxes were left blank or just spaces
+                    else if (name.trim().isEmpty() || space.trim().isEmpty()) {
+                        JOptionPane.showMessageDialog(null, "Input cannot be empty!", "Warning", JOptionPane.WARNING_MESSAGE);
+                    } 
+                    // if inputted value is valid or okay
+                    else {
                         reservations[count] = new Reservation(name.trim(), space.trim());   
                         count++;
                         JOptionPane.showMessageDialog(null, "Reservation Added Successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-                    } else {
-                        JOptionPane.showMessageDialog(null, "Input cannot be empty!", "Warning", JOptionPane.WARNING_MESSAGE);
                     }
+
                 } else {
+
                     JOptionPane.showMessageDialog(null, "System Full! Cannot add more reservations.", "Full Space", JOptionPane.WARNING_MESSAGE);
                 }
             }
@@ -142,7 +150,7 @@ public class SimpleStudySpaceSystem {     //define the main class
                     JOptionPane.showMessageDialog(null, "No reservation to edit.", "Edit Reservation", JOptionPane.INFORMATION_MESSAGE);
                 } else {
                     String searchName = JOptionPane.showInputDialog(null, "Enter Student Name to Edit:");
-                    int matchIndex = -1;
+                    int matchIndex = -1; 
 
                     if (searchName != null && !searchName.trim().isEmpty()) {
                         for (int i = 0; i < count; i++) {
