@@ -108,7 +108,7 @@ def run_program():
     while running:
         clear_screen()
 
-        # ---- ASCII ART HEADER ----
+        # ASCII ART HEADER
         print(ASCII_ART)
         print("=" * 60)
 
