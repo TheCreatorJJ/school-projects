@@ -15,4 +15,6 @@ basic-java/
 # OS / Editor
 .DS_Store
 .vscode/
-.vscode/
+
+ast_diagram
+decision_tree_output
