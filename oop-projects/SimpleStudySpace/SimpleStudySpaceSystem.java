@@ -196,7 +196,7 @@ public class SimpleStudySpaceSystem {     //define the main class
                     }
 
                     if (matchIndex != -1) {
-                        // Shift lift one object moves instead of two strings
+                        // Shift left one object moves instead of two strings
                         for (int i = matchIndex; i < count - 1; i++) {
                             reservations[i] = reservations[i + 1];    
                         }

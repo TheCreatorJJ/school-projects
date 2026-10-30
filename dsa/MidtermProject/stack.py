@@ -1,6 +1,6 @@
 import os
 import sys
-from ascii_art import ASCII_ART
+from dsa.MidtermProject.ascii_art import ASCII_ART
 
 
 class stack:
