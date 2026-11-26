@@ -3,7 +3,6 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -29,22 +28,21 @@ import javax.swing.ListSelectionModel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 
-// Main application window for booking, searching, and managing study spaces
 public class MainWorkspaceView {
 
     private static final int FRAME_WIDTH = 940;
     private static final int FRAME_HEIGHT = 560;
 
-    // UI color palette
-    private static final Color SKY_BLUE      = new Color(0x0A, 0x8E, 0xFF);
-    private static final Color SIDEBAR_BLUE  = new Color(0x08, 0x77, 0xD6);
-    private static final Color CLOUDY_WHITE  = new Color(0xF0, 0xF0, 0xF0);
-    private static final Color AMBER_RED     = new Color(0xFF, 0x3A, 0x12);
-    private static final Color SELECTED_RED  = new Color(0xFF, 0xE3, 0xDC);
-    private static final Color CARD_WHITE    = new Color(0xFF, 0xFF, 0xFF);
-    private static final Color TEXT_INK      = new Color(0x1B, 0x1B, 0x1B);
-    private static final Color BORDER_GRAY   = new Color(0xD6, 0xD6, 0xD6);
+    private static final Color SKY_BLUE     = new Color(0x0A, 0x8E, 0xFF);
+    private static final Color SIDEBAR_BLUE = new Color(0x08, 0x77, 0xD6);
+    private static final Color CLOUDY_WHITE = new Color(0xF0, 0xF0, 0xF0);
+    private static final Color AMBER_RED    = new Color(0xFF, 0x3A, 0x12);
+    private static final Color SELECTED_RED = new Color(0xFF, 0xE3, 0xDC);
+    private static final Color CARD_WHITE   = new Color(0xFF, 0xFF, 0xFF);
+    private static final Color TEXT_INK     = new Color(0x1B, 0x1B, 0x1B);
+    private static final Color BORDER_GRAY  = new Color(0xD6, 0xD6, 0xD6);
 
     private final JFrame frame;
     private final DatabaseConfig dbConfig;
@@ -60,7 +58,6 @@ public class MainWorkspaceView {
     private JTable reservationsTable;
     private DefaultTableModel searchTableModel;
     private JTable searchResultsTable;
-    private JLabel statusLabel;
 
     public MainWorkspaceView(DatabaseConfig dbConfig, UserSession session) {
         this.dbConfig = dbConfig;
@@ -83,7 +80,6 @@ public class MainWorkspaceView {
         root.add(createHeaderPanel(), BorderLayout.NORTH);
         root.add(createSidebarPanel(), BorderLayout.WEST);
         root.add(createTabbedWorkspace(), BorderLayout.CENTER);
-        root.add(createStatusBar(), BorderLayout.SOUTH);
 
         frame.setContentPane(root);
     }
@@ -110,7 +106,6 @@ public class MainWorkspaceView {
         leftText.add(title, BorderLayout.NORTH);
         leftText.add(subtitle, BorderLayout.SOUTH);
 
-        // Highlight admin role badge in red; keep student badge neutral white
         JLabel badge = new JLabel(session.getRole().toUpperCase() + ": " + session.getFullName());
         badge.setFont(new Font("Segoe UI", Font.BOLD, 12));
         badge.setForeground(session.isAdmin() ? CARD_WHITE : TEXT_INK);
@@ -150,7 +145,6 @@ public class MainWorkspaceView {
             txtSearchKeyword.requestFocusInWindow();
         });
 
-        // Separate container so admin actions can be toggled off for student logins
         adminSectionPanel = new JPanel();
         adminSectionPanel.setLayout(new BoxLayout(adminSectionPanel, BoxLayout.Y_AXIS));
         adminSectionPanel.setOpaque(false);
@@ -183,7 +177,6 @@ public class MainWorkspaceView {
         sidebar.add(Box.createRigidArea(new Dimension(0, 8)));
         sidebar.add(btnSearchTab);
         sidebar.add(adminSectionPanel);
-        // Push the logout button to the bottom of the sidebar
         sidebar.add(Box.createVerticalGlue());
         sidebar.add(btnLogout);
 
@@ -206,7 +199,6 @@ public class MainWorkspaceView {
         return btn;
     }
 
-    // Lock down admin controls and auto-fill student name when logged in as a student
     private void applySessionRules() {
         adminSectionPanel.setVisible(session.isAdmin());
         if (!session.isAdmin()) {
@@ -378,7 +370,6 @@ public class MainWorkspaceView {
         return card;
     }
 
-    // Builds either the main table or search table based on isMainTable
     private JPanel createTableCard(String headingText, boolean isMainTable) {
         JPanel card = new JPanel(new BorderLayout(0, 8));
         card.setBackground(CARD_WHITE);
@@ -392,13 +383,7 @@ public class MainWorkspaceView {
         tableHeading.setForeground(TEXT_INK);
 
         String[] columns = {"ID", "Student Name", "Study Space", "Created At"};
-        DefaultTableModel model = new DefaultTableModel(columns, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                // Prevent inline edits; admins must use the Edit Selected button
-                return false;
-            }
-        };
+        DefaultTableModel model = new ReadOnlyTableModel(columns, 0);
 
         JTable table = new JTable(model);
         table.setFont(new Font("Segoe UI", Font.PLAIN, 13));
@@ -409,40 +394,12 @@ public class MainWorkspaceView {
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setSelectionBackground(SELECTED_RED);
         table.setSelectionForeground(TEXT_INK);
+        table.setDefaultRenderer(Object.class, new ReservationRowRenderer());
 
-        // Keep row text readable when highlighted
-        DefaultTableCellRenderer rowRenderer = new DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(
-                    JTable tbl, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-                Component c = super.getTableCellRendererComponent(tbl, value, isSelected, hasFocus, row, column);
-                c.setBackground(isSelected ? SELECTED_RED : CARD_WHITE);
-                c.setForeground(TEXT_INK);
-                return c;
-            }
-        };
-        table.setDefaultRenderer(Object.class, rowRenderer);
-
-        // Custom header styling so Look-and-Feel defaults don't override SKY_BLUE
-        DefaultTableCellRenderer headerRenderer = new DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(
-                    JTable tbl, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-                JLabel lbl = (JLabel) super.getTableCellRendererComponent(tbl, value, isSelected, hasFocus, row, column);
-                lbl.setBackground(SKY_BLUE);
-                lbl.setForeground(CARD_WHITE);
-                lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
-                lbl.setOpaque(true);
-                lbl.setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createMatteBorder(0, 0, 1, 1, BORDER_GRAY),
-                        new EmptyBorder(6, 8, 6, 8)
-                ));
-                return lbl;
-            }
-        };
-        table.getTableHeader().setDefaultRenderer(headerRenderer);
-        table.getTableHeader().setBackground(SKY_BLUE);
-        table.getTableHeader().setForeground(CARD_WHITE);
+        JTableHeader header = table.getTableHeader();
+        header.setDefaultRenderer(new ReservationHeaderRenderer());
+        header.setBackground(SKY_BLUE);
+        header.setForeground(CARD_WHITE);
 
         if (isMainTable) {
             mainTableModel = model;
@@ -459,19 +416,6 @@ public class MainWorkspaceView {
         card.add(tableHeading, BorderLayout.NORTH);
         card.add(scrollPane, BorderLayout.CENTER);
         return card;
-    }
-
-    private JPanel createStatusBar() {
-        JPanel bar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
-        bar.setBackground(CARD_WHITE);
-        bar.setBorder(BorderFactory.createLineBorder(BORDER_GRAY, 1));
-
-        statusLabel = new JLabel("Logged in as " + session.getFullName() + " (" + session.getRole() + ").");
-        statusLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        statusLabel.setForeground(TEXT_INK);
-
-        bar.add(statusLabel);
-        return bar;
     }
 
     private void reserveSpace() {
@@ -498,7 +442,6 @@ public class MainWorkspaceView {
             stmt.setString(2, reservation.getSpaceName());
             stmt.executeUpdate();
 
-            // Only clear student name for admins; students keep their locked full name
             if (session.isAdmin()) {
                 txtStudentName.setText("");
             }
@@ -506,14 +449,18 @@ public class MainWorkspaceView {
             txtSpaceName.requestFocusInWindow();
 
             loadMainReservations();
-            statusLabel.setText("Reserved \"" + reservation.getSpaceName() + "\" for " + reservation.getStudentName() + ".");
+            JOptionPane.showMessageDialog(
+                    frame,
+                    "Reserved \"" + reservation.getSpaceName() + "\" for " + reservation.getStudentName() + ".",
+                    "Reservation Saved",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
 
         } catch (SQLException ex) {
             showError("Failed to save reservation", ex);
         }
     }
 
-    // Shared loader for both full table refreshes and keyword searches
     private int populateTable(DefaultTableModel targetModel, String keyword) throws SQLException {
         boolean hasFilter = keyword != null && !keyword.trim().isEmpty();
         String sql = hasFilter
@@ -556,8 +503,7 @@ public class MainWorkspaceView {
 
     private void loadMainReservations() {
         try {
-            int count = populateTable(mainTableModel, null);
-            statusLabel.setText("Loaded " + count + " reservation(s) from public.reservations.");
+            populateTable(mainTableModel, null);
         } catch (SQLException ex) {
             showError("Failed to load reservations", ex);
         }
@@ -567,17 +513,21 @@ public class MainWorkspaceView {
         String keyword = txtSearchKeyword.getText().trim();
         try {
             int count = populateTable(searchTableModel, keyword);
-            if (keyword.isEmpty()) {
-                statusLabel.setText("Showing all " + count + " reservation(s) in Search tab.");
-            } else {
-                statusLabel.setText("Found " + count + " match(es) for \"" + keyword + "\".");
+            if (count == 0) {
+                JOptionPane.showMessageDialog(
+                        frame,
+                        keyword.isEmpty()
+                                ? "No reservations found."
+                                : "No reservations matched \"" + keyword + "\".",
+                        "Search Results",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
             }
         } catch (SQLException ex) {
             showError("Failed to search reservations", ex);
         }
     }
 
-    // Reads whichever tab is currently visible so Edit/Cancel works from either view
     private Object[] getSelectedRowData() {
         boolean onSearchTab = workspaceTabs.getSelectedIndex() == 1;
         JTable activeTable = onSearchTab ? searchResultsTable : reservationsTable;
@@ -663,7 +613,12 @@ public class MainWorkspaceView {
             if (workspaceTabs.getSelectedIndex() == 1) {
                 runSearch();
             }
-            statusLabel.setText("Updated reservation #" + id + ".");
+            JOptionPane.showMessageDialog(
+                    frame,
+                    "Updated reservation #" + id + ".",
+                    "Updated",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
 
         } catch (SQLException ex) {
             showError("Failed to update reservation", ex);
@@ -714,7 +669,12 @@ public class MainWorkspaceView {
             if (workspaceTabs.getSelectedIndex() == 1) {
                 runSearch();
             }
-            statusLabel.setText("Cancelled reservation #" + id + ".");
+            JOptionPane.showMessageDialog(
+                    frame,
+                    "Cancelled reservation #" + id + ".",
+                    "Cancelled",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
 
         } catch (SQLException ex) {
             showError("Failed to cancel reservation", ex);
@@ -732,5 +692,44 @@ public class MainWorkspaceView {
 
     public void show() {
         frame.setVisible(true);
+    }
+
+    private static class ReadOnlyTableModel extends DefaultTableModel {
+        ReadOnlyTableModel(Object[] columnNames, int rowCount) {
+            super(columnNames, rowCount);
+        }
+
+        @Override
+        public boolean isCellEditable(int row, int column) {
+            return false;
+        }
+    }
+
+    private static class ReservationRowRenderer extends DefaultTableCellRenderer {
+        @Override
+        public Component getTableCellRendererComponent(
+                JTable tbl, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            Component c = super.getTableCellRendererComponent(tbl, value, isSelected, hasFocus, row, column);
+            c.setBackground(isSelected ? SELECTED_RED : CARD_WHITE);
+            c.setForeground(TEXT_INK);
+            return c;
+        }
+    }
+
+    private static class ReservationHeaderRenderer extends DefaultTableCellRenderer {
+        @Override
+        public Component getTableCellRendererComponent(
+                JTable tbl, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            JLabel lbl = (JLabel) super.getTableCellRendererComponent(tbl, value, isSelected, hasFocus, row, column);
+            lbl.setBackground(SKY_BLUE);
+            lbl.setForeground(CARD_WHITE);
+            lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            lbl.setOpaque(true);
+            lbl.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createMatteBorder(0, 0, 1, 1, BORDER_GRAY),
+                    new EmptyBorder(6, 8, 6, 8)
+            ));
+            return lbl;
+        }
     }
 }
